@@ -2,7 +2,6 @@ import openai
 import os
 import requests
 os.environ["OPENAI_API_KEY"] = 'sk-H2nBsaKMbIGSh2uSl7QvKtGttNPGeOacPUeqy2fXJOr58AhP'
-
 openai.api_key = os.getenv('OPENAI_API_KEY')
 openai.api_base = "https://api.chatanywhere.com.cn/v1"
 
@@ -20,10 +19,11 @@ def get_completion(prompt, model='gpt-3.5-turbo'):
 
 
 def entity_extraction(sentence):
-    entities = ["时间", "地点", "人物", "国家地区"]
+    entities = ["时间", "人物", "组织机构"]
     prompt = "你现在需要完成一个实体抽取任务，定义的实体类别有：" + \
         "、".join(
-            entities) + "\n要求：1、输出格式表示为实体名:实体类型;2、输出的每个结果用换行符分割;3请从给定的句子中抽取，不要自行总结。\n" + f"句子：{sentence}"
+            entities) + '''\n要求：1、输出格式表示为实体名:实体类型;2、输出的每个结果用换行符分割;3请从给定的句子中抽取，不要自行总结。
+            4.对于未定义的实体类别，请输出为其他\n''' + f"句子：{sentence}"
     result = get_completion(prompt)
     print("实体识别完毕！")
     print("答案为：\n{}".format(result))
@@ -152,6 +152,20 @@ def translate_extraction(sentence):
     return result
 
 
+def people_daily_ner(sentence):
+    entities = ["DATE", "ORG", "PERSON"]
+    prompt = '''你现在需要完成一个实体抽取任务，定义的实体类别有\n[''' + \
+        "、".join(entities) + ''']\n要求：
+    1、输出格式:以json+列表的格式进行输出，输出格式为：
+    [{"entity_index": {"begin": 实体首字符在句子中的位置, "end": 实体尾字符在句子中位置}, "entity_type":实体类别 , "entity":"实体内容"}];
+    2、对于多个实体，以列表的形式输出，列表中的每个元素为一个实体对应的json格式;\n
+    以下是一个示例：
+    输入：中共中央总书记、国家主席江泽民
+    输出：[{"entity_index": {"begin": 0, "end": 4}, "entity_type": "ORG", "entity": "中共中央"}, {"entity_index": {"begin": 12, "end": 15}, "entity_type": "PERSON", "entity": "江泽民"}]''' + f"需要识别的句子为：\n\"{sentence}\""
+    print(prompt)
+    print(get_completion(prompt))
+
+
 EE_text = '驻港部队从1993年初开始组建，1996年1月28日组建完毕，1997年7月1日0时进驻香港，取代驻港英军接管香港防务，驻港军费均由中央人民政府负担。《中华人民共和国香港特别行政区驻军法》规定了驻香港部队的职责为防备和抵抗侵略，保卫香港特别行政区的安全以及在特别时期（战争状态、香港进入紧急状态时 ）根据中央人民政府决定在香港特别行政区实施的全国性法律的规定履行职责'
 RE_text = '糖尿病是一种常见的慢性疾病，主要症状包括多饮、多尿、乏力、体重下降等。发病人群通常是肥胖、家族病史、不良饮食习惯等高风险人群。治疗方法主要包括定期血糖检测、饮食控制、锻炼、药物治疗和胰岛素注射。治愈周期因不同患者而异，但坚持正确的治疗和生活方式改变，能有效控制病情、预防并发症的发生。'
 PE_text = '该款智能手机搭载高通骁龙处理器，内置5000mAh电池，支持快充功能，采用6.5英寸全高清显示屏，照方面具备6400万像素后置摄像头和1600万素前置摄像头。操作系统为Android 11，存储容量64GB，可扩展至512GB。'
@@ -161,19 +175,22 @@ SC_text = '这是一款非常好用的手机，我很喜欢！'
 ABSA_text = '这里的气氛非常好，但是装修太糟糕了'
 Classify_text = '中国国家女子足球队将于7月7日从广州出发，飞赴澳大利亚阿德莱德队伍大本营，踏上2023年女足世界杯之旅。抵达澳大利亚之后，队伍还计划于13日和17日分别与巴西国家女子足球队和哥伦比亚国家女子足球队进行热身赛。'
 TRAN_text = '''Got this for my daughter for her birthday cuz she keeps taking \
-            mine from my room. Yes, adults also like pandas too. She takes \
-            it everywhere with her, and it's super soft and cute. One of the \
+        mine from my room. Yes, adults also like pandas too. She takes \
+        it everywhere with her, and it's super soft and cute. One of the \
             ears is a bit lower than the other, and I don't think that was \
-            designed to be asymmetrical. It's a bit small for what I paid for it \
+        designed to be asymmetrical. It's a bit small for what I paid for it \
             though. I think there might be other options that are bigger for \
             the same price. It arrived a day earlier than expected, so I got \
             to play with it myself before I gave it to my daughter.'''
-# entity_extraction(EE_text)
+
+
+# entity_extraction("迈向充满希望的新世纪——一九九八年新年讲话(附图片1张)")
 # relation_extraction(RE_text)
 # property_extraction(PE_text)
 # event_extraction(EVE_text)
-address_extraction(Add_text)
+# address_extraction(Add_text)
 # sc_extraction(SC_text)
 # ABSA_extraction(ABSA_text)
 # translate_extraction(TRAN_text)
 # text_classification(Classify_text)
+people_daily_ner("迈向充满希望的新世纪——一九九八年新年讲话(附图片1张)")
