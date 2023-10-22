@@ -11,6 +11,26 @@ openai.api_base = "http://182.254.164.88:8000/v1"
 EMBEDDING_MODEL = "vicuna-13b-v1.3"
 
 
+def mean_embedding(file, model=EMBEDDING_MODEL):
+    path = "data/cos/"
+    loader = PyPDFLoader(path+file)
+    pages = loader.load_and_split()
+    total_score = [0 for i in range(96)]
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        for page in pages:
+            pbar.update(1)
+            embedding = get_embedding(page.page_content, model=model)
+            total_score = [a + b for a, b in zip(total_score, embedding)]
+    return [i / len(pages) for i in total_score]
+
+
+def file_cos(file1, file2):
+    embedding_first = mean_embedding(file1)
+    embedding_second = mean_embedding(file2)
+    return cosine_similarity(embedding_first, embedding_second)
+
+
 def vicuna_cos(file1, file2):
     path = "data/cos/"
     loader_first = PyPDFLoader(path+file1)
@@ -31,7 +51,8 @@ def vicuna_cos(file1, file2):
     return total_score / pages_min
 
 
-print("相似度：%f" % vicuna_cos("党委理论学习中心组学习材料汇编2023年第16期.pdf", "chatle.pdf"))
+print("相似度：%f" % file_cos(
+    "党委理论学习中心组学习材料汇编2023年第16期.pdf", "党委理论学习中心组学习材料汇编2023年第15期.pdf"))
 
 # loader_first = PyPDFLoader(
 #     "D:\CodePlace\Python\Prompt\engineer\data\cos\党委理论学习中心组学习材料汇编2023年第16期.pdf")
