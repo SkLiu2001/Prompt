@@ -6,23 +6,28 @@ from tqdm import tqdm
 
 # 获取访问open ai的密钥
 openai.api_key = "EMPTY"
-openai.api_base = "http://182.254.164.88:8000/v1"
+openai.api_base = "http://localhost:8000/v1"
 # 选择模型
-EMBEDDING_MODEL = "vicuna-13b-v1.3"
+EMBEDDING_MODEL = "Qwen-14B-Chat-Int4"
 
 
-def mean_embedding(file, model=EMBEDDING_MODEL):
-    path = "data/cos/"
-    loader = PyPDFLoader(path+file)
-    pages = loader.load_and_split()
-    total_score = [0 for i in range(96)]
-    with tqdm(total=len(pages)) as pbar:
-        pbar.set_description('Processing:')
-        for page in pages:
-            pbar.update(1)
-            embedding = get_embedding(page.page_content, model=model)
-            total_score = [a + b for a, b in zip(total_score, embedding)]
-    return [i / len(pages) for i in total_score]
+def mean_embedding(file, model=EMBEDDING_MODEL, is_pdf=True):
+    if is_pdf:
+        loader = PyPDFLoader(file)
+        pages = loader.load_and_split()
+        total_score = [0 for i in range(96)]
+        with tqdm(total=len(pages)) as pbar:
+            pbar.set_description('Processing:')
+            for page in pages:
+                pbar.update(1)
+                embedding = get_embedding(page.page_content, model=model)
+                total_score = [a + b for a, b in zip(total_score, embedding)]
+        return [i / len(pages) for i in total_score]
+    else:
+        with open(file, "r", encoding="utf-8") as f:
+            data = f.read()
+            embedding = get_embedding(data, model=model)
+            return embedding
 
 
 def file_cos(file1, file2):
