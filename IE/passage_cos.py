@@ -33,31 +33,28 @@ def mean_embedding(file, model=EMBEDDING_MODEL, is_pdf=True):
 def file_cos(file1, file2):
     embedding_first = mean_embedding(file1)
     embedding_second = mean_embedding(file2)
-    return cosine_similarity(embedding_first, embedding_second)
+    return {"similarity": cosine_similarity(embedding_first, embedding_second)}
 
 
-def vicuna_cos(file1, file2):
-    path = "data/cos/"
-    loader_first = PyPDFLoader(path+file1)
-    pages_first = loader_first.load_and_split()
-    loader_second = PyPDFLoader(path+file2)
-    pages_second = loader_second.load_and_split()
-    pages_min = min(len(pages_first), len(pages_second))
-    total_score = 0
-    with tqdm(total=pages_min) as pbar:
-        pbar.set_description('Processing:')
-        for i in range(pages_min):
-            pbar.update(1)
-            embedding_first = get_embedding(
-                pages_first[i].page_content, model=EMBEDDING_MODEL)
-            embedding_second = get_embedding(
-                pages_second[i].page_content, model=EMBEDDING_MODEL)
-            total_score += cosine_similarity(embedding_first, embedding_second)
-    return total_score / pages_min
+# def vicuna_cos(file1, file2):
+#     path = "data/cos/"
+#     loader_first = PyPDFLoader(path+file1)
+#     pages_first = loader_first.load_and_split()
+#     loader_second = PyPDFLoader(path+file2)
+#     pages_second = loader_second.load_and_split()
+#     pages_min = min(len(pages_first), len(pages_second))
+#     total_score = 0
+#     with tqdm(total=pages_min) as pbar:
+#         pbar.set_description('Processing:')
+#         for i in range(pages_min):
+#             pbar.update(1)
+#             embedding_first = get_embedding(
+#                 pages_first[i].page_content, model=EMBEDDING_MODEL)
+#             embedding_second = get_embedding(
+#                 pages_second[i].page_content, model=EMBEDDING_MODEL)
+#             total_score += cosine_similarity(embedding_first, embedding_second)
+#     return total_score / pages_min
 
-
-print("相似度：%f" % file_cos(
-    "党委理论学习中心组学习材料汇编2023年第16期.pdf", "党委理论学习中心组学习材料汇编2023年第15期.pdf"))
 
 # loader_first = PyPDFLoader(
 #     "D:\CodePlace\Python\Prompt\engineer\data\cos\党委理论学习中心组学习材料汇编2023年第16期.pdf")
