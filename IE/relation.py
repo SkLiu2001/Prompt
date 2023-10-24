@@ -1,6 +1,6 @@
 # 关系抽取
 import json
-from langchain.document_loaders import TextLoader
+from langchain.document_loaders import PyPDFLoader
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
@@ -11,6 +11,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
 )
 from units.merge_json import merge_json
+from tqdm import tqdm
 
 
 def relation_extraction(path):
@@ -57,9 +58,8 @@ def relation_extraction(path):
             ("human", "{input}")
         ]
     )
-
-    with open(path, "r", encoding="utf-8") as f:
-        data = f.read()
+    loader = PyPDFLoader(path)
+    pages = loader.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=256, chunk_overlap=16)
     chain = LLMChain(
@@ -72,20 +72,18 @@ def relation_extraction(path):
             openai_api_base="http://localhost:8000/v1")
         # output_parser=output_parser
     )
-
-    texts = text_splitter.split_text(data)
     merged_json = {"relation_list": []}
-    for text in texts:
-        print("----------------------------------")
-        # print(text)
-        tmp = chain(
-            {"input": text}, return_only_outputs=True)['text']
-        try:
-            json_object = json.loads(tmp)
-        except ValueError as e:
-            continue
-        json_object = json.loads(tmp)
-        print(json_object)
-        merged_json = merge_json(merged_json, json_object)
-        print("----------------------------------")
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        for page in pages:
+            texts = text_splitter.split_text(page.page_content)
+            for text in texts:
+                tmp = chain(
+                    {"input": text}, return_only_outputs=True)['text']
+                try:
+                    json_object = json.loads(tmp)
+                    merged_json = merge_json(merged_json, json_object)
+                except Exception as e:
+                    continue
+            pbar.update(1)
     return merged_json

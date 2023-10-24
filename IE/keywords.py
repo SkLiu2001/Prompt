@@ -1,6 +1,6 @@
 # 关键词抽取
 import json
-from langchain.document_loaders import TextLoader
+from langchain.document_loaders import PyPDFLoader
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
@@ -11,6 +11,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
 )
 from units.merge_json import merge_json
+from tqdm import tqdm
 
 
 def keywords_extraction(path):
@@ -51,8 +52,8 @@ def keywords_extraction(path):
             ("human", "{input}")
         ]
     )
-    with open(path, "r", encoding="utf-8") as f:
-        data = f.read()
+    loader = PyPDFLoader(path)
+    pages = loader.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=2048, chunk_overlap=16)
     chain = LLMChain(
@@ -65,25 +66,26 @@ def keywords_extraction(path):
             openai_api_base="http://localhost:8000/v1")
         # output_parser=output_parser
     )
-
-    texts = text_splitter.split_text(data)
     res = {}
-    refine = ""
-    prefix = '''下面给出目前已有的关键词列表'''+refine + \
-        '''要求对已有的关键词和新文本进行综合考虑，重新总结不超过"五个"关键词，可以替换原有的关键词,输出格式格式为：{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}'''
-    for text in texts:
-        # print("----------------------------------")
-        tmp = chain(
-            {"input": prefix+text}, return_only_outputs=True)['text']
-        refine = tmp
-        prefix = '''下面给出目前已有的关键词列表'''+refine + \
-            '''要求对已有的关键词和新文本进行综合考虑，总结不超过"五个"关键词，可以替换原有的关键词,输出格式格式为：{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}'''
-        # print(prefix)
-        # print(tmp)
-        try:
-            json_object = json.loads(tmp)
-        except ValueError as e:
-            continue
-        res = json_object
-        # print("----------------------------------")
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description("Processing:")
+        for page in pages:
+            texts = text_splitter.split_text(page.page_content)
+            refine = ""
+            prefix = '''下面给出目前已有的关键词列表'''+refine + \
+                '''要求对已有的关键词和新文本进行综合考虑，重新总结不超过"五个"关键词，可以替换原有的关键词,输出格式格式为：{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}'''
+            for text in texts:
+                tmp = chain(
+                    {"input": prefix+text}, return_only_outputs=True)['text']
+                print(tmp)
+                refine = tmp
+                prefix = '''下面给出目前已有的关键词列表'''+refine + \
+                    '''要求对已有的关键词和新文本进行综合考虑，总结不超过"五个"关键词，可以替换原有的关键词,输出格式格式为：{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}'''
+                try:
+                    json_object = json.loads(tmp)
+                    res = json_object
+                except Exception as e:
+                    continue
+
+            pbar.update(1)
     return res

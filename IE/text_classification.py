@@ -1,6 +1,6 @@
 # 文本分类
 import json
-from langchain.document_loaders import TextLoader
+from langchain.document_loaders import PyPDFLoader
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
@@ -11,6 +11,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
 )
 from units.merge_json import merge_json
+from tqdm import tqdm
 model = "Qwen-14B-Chat-Int4"
 
 
@@ -64,8 +65,8 @@ def text_classification(path):
             ("human", "{input}")
         ]
     )
-    with open(path, "r", encoding="utf-8") as f:
-        data = f.read()
+    loader = PyPDFLoader(path)
+    pages = loader.load_and_split()
     text_splitter = CharacterTextSplitter(
         chunk_size=2048, chunk_overlap=16)
     chain = LLMChain(
@@ -78,19 +79,33 @@ def text_classification(path):
             openai_api_base="http://localhost:8000/v1")
         # output_parser=output_parser
     )
-
-    texts = text_splitter.split_text(data)
     merged_json = {"classification_list": []}
-    for text in texts:
-        # print("----------------------------------")
-        # print(text)
-        tmp = chain(
-            {"input": text}, return_only_outputs=True)['text']
-        # print(tmp)
-        try:
-            json_object = json.loads(tmp)
-        except ValueError as e:
-            continue
-        merge_json(merged_json, json_object)
-        # print("----------------------------------")
-    return merged_json
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        for page in pages:
+            texts = text_splitter.split_text(page.page_content)
+            for text in texts:
+                tmp = chain(
+                    {"input": text}, return_only_outputs=True)['text']
+                try:
+                    json_object = json.loads(tmp)
+                    merge_json(merged_json, json_object)
+                except Exception as e:
+                    continue
+
+            pbar.update(1)
+    # return merged_json
+
+    # 初始化一个空字典来存储分类和出现次数
+    classification_counts = {}
+
+    # 遍历分类列表并统计出现次数
+    for item in merged_json["classification_list"]:
+        classification = item["classification"]
+        classification_counts[classification] = classification_counts.get(
+            classification, 0) + 1
+
+    # 找到出现次数最多的分类和次数
+    most_common_classification = max(
+        classification_counts, key=classification_counts.get)
+    return {"classification_list": [{"classification": most_common_classification}]}

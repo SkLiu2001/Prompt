@@ -1,6 +1,6 @@
 # 摘要
 import json
-from langchain.document_loaders import TextLoader
+from langchain.document_loaders import PyPDFLoader
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
@@ -11,6 +11,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
 )
 from units.merge_json import merge_json
+from tqdm import tqdm
 
 
 def summary(path):
@@ -51,8 +52,16 @@ def summary(path):
             ("human", "{input}")
         ]
     )
-    with open(path, "r", encoding="utf-8") as f:
-        data = f.read()
+    reduce_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system",
+             '''目前已知分段分本的摘要,请你根据上述所有摘要生成新的摘要，要求尽可能简洁，输出结果在200字以内，并以json格式输出，格式为：{{"summary": "摘要内容"}}'''),
+            few_shot_prompt,
+            ("human", "{input}")
+        ]
+    )
+    loader = PyPDFLoader(path)
+    pages = loader.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1024, chunk_overlap=16)
     chain = LLMChain(
@@ -65,20 +74,25 @@ def summary(path):
             openai_api_base="http://localhost:8000/v1")
         # output_parser=output_parser
     )
-
-    texts = text_splitter.split_text(data)
     map = ""
-    for text in texts:
-        print("----------------------------------")
-        tmp = chain(
-            {"input": text}, return_only_outputs=True)['text']
-        print(tmp)
-        try:
-            json_object = json.loads(tmp)
-        except ValueError as e:
-            continue
-        map += "。"+json_object["summary"]
-        print("----------------------------------")
-    print(map)
-    print(chain(
-        {"input": map}, return_only_outputs=True)['text'])
+    tmp = ""
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        for page in pages:
+            texts = text_splitter.split_text(page.page_content)
+            for text in texts:
+                tmp = chain(
+                    {"input": text}, return_only_outputs=True)['text']
+                # print(tmp)
+                try:
+                    map += tmp
+                except Exception as e:
+                    continue
+            pbar.update(1)
+        # print(map)
+    res = chain({"input": map}, return_only_outputs=True)['text']
+    try:
+        json_object = json.loads(res, strict=False)
+        return json_object
+    except Exception as e:
+        return {"summary": tmp}

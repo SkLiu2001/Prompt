@@ -11,6 +11,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
 )
 from units.merge_json import merge_json
+from tqdm import tqdm
 model = "Qwen-14B-Chat-Int4"
 
 
@@ -51,7 +52,7 @@ def ner(path):
 
     # path = "data/cos/"
     loader_first = PyPDFLoader(path)
-    pages_first = loader_first.load_and_split()
+    pages = loader_first.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=256, chunk_overlap=16)
     chain = LLMChain(
@@ -64,23 +65,19 @@ def ner(path):
             openai_api_base="http://localhost:8000/v1")
         # output_parser=output_parser
     )
-
-    # # 单句测试
-    # print(final_prompt.format(
-    #     input="江主席的贺辞说，中俄建设面向 2 1世纪的战略协作伙伴关系，无论在中国，还是在俄罗斯，都有着广泛的社会基础，中俄长期友好合作的思想日益深入人心"))
-    # tmp = chain({"input": "江主席的贺辞说，中俄建设面向 2 1世纪的战略协作伙伴关系，无论在中国，还是在俄罗斯，都有着广泛的社会基础，中俄长期友好合作的思想日益深入人心"},
-    #             return_only_outputs=True)['text']
-    # print(tmp)
-
-    texts = text_splitter.split_text(pages_first[1].page_content)
     merged_json = {"named_entities": []}
-    for text in texts:
-        tmp = chain(
-            {"input": text}, return_only_outputs=True)['text']
-        # print(tmp)
-        try:
-            json_object = json.loads(tmp, strict=False)
-        except ValueError as e:
-            continue
-        merged_json = merge_json(merged_json, json_object)
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        for page in pages:
+            texts = text_splitter.split_text(page.page_content)
+            for text in texts:
+                tmp = chain(
+                    {"input": text}, return_only_outputs=True)['text']
+                # print(tmp)
+                try:
+                    json_object = json.loads(tmp, strict=False)
+                    merged_json = merge_json(merged_json, json_object)
+                except Exception as e:
+                    continue
+            pbar.update(1)
     return merged_json

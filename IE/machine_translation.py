@@ -1,6 +1,6 @@
 # 机器翻译
 import json
-from langchain.document_loaders import TextLoader
+from langchain.document_loaders import PyPDFLoader
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
@@ -10,6 +10,7 @@ from langchain.prompts import (
     FewShotChatMessagePromptTemplate,
     ChatPromptTemplate,
 )
+from tqdm import tqdm
 
 
 def tranlate(path):
@@ -49,10 +50,10 @@ def tranlate(path):
         ]
     )
 
-    with open(path, "r", encoding="utf-8") as f:
-        data = f.read()
+    loader_first = PyPDFLoader(path)
+    pages = loader_first.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1024, chunk_overlap=16)
+        chunk_size=2048, chunk_overlap=16)
     chain = LLMChain(
         prompt=final_prompt,
         # 温度调为0，可以保证输出的结果是确定的
@@ -64,18 +65,19 @@ def tranlate(path):
         # output_parser=output_parser
     )
 
-    texts = text_splitter.split_text(data)
     res = {"result": ""}
-    for text in texts:
-        print("----------------------------------")
-        print(text)
-        tmp = chain(
-            {"input": text}, return_only_outputs=True)['text']
-        # print(tmp)
-        try:
-            json_object = json.loads(tmp)
-        except ValueError as e:
-            continue
-        res["result"] += json_object["result"]
-        print("----------------------------------")
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        for page in pages:
+            texts = text_splitter.split_text(page.page_content)
+            for text in texts:
+                tmp = chain(
+                    {"input": text}, return_only_outputs=True)['text']
+                try:
+                    json_object = json.loads(tmp)
+                    res["result"] += json_object["result"]
+                except Exception as e:
+                    continue
+
+            pbar.update(1)
     return res
