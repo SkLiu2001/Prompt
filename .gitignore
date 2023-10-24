@@ -1,2 +1,5 @@
 *.cpp
 __pycache__/
+*.json
+*.docs
+tmp/*
