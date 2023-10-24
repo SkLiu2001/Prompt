@@ -36,13 +36,13 @@ async def save_file(file: UploadFile) -> str:
     file_save_path = f"tmp/{file_prefix}_{time_stamp}.{file_suffix}"
     file_type = file.content_type  # unused
     file_content = await file.read()
-    with open(file.filename, "wb") as f:
+    with open(file_save_path, "wb") as f:
         f.write(file_content)
     return file_save_path
-        
+
 
 async def doc_ner(file: UploadFile = File(...)):
-    file_path = save_file(file)
+    file_path = await save_file(file)
     result = ner(file_path)  # TODO: try catch
     return {'result': result}
 
@@ -55,7 +55,6 @@ async def test2(apiname, request: Request):
     args = await request.json()
 
     return {'result': f'这是一个POST，您请求的是：{apiname}，您的参数是：{args}'}
-
 
 
 # print(relation_extraction("data/re/yanbao007.txt"))
@@ -75,7 +74,7 @@ app.post("/doc_ie/re", tags=["IE"], summary="单文档关系抽取")(test2)
 
 if __name__ == '__main__':
     uvicorn.run(
-        app = app,
-        host = "localhost",
-        port = 8000
+        app=app,
+        host="localhost",
+        port=12931
     )
