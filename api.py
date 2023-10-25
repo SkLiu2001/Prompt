@@ -6,16 +6,16 @@ import time
 import os
 from typing import List
 
-# from IE.ner import ner
-# from IE.relation import relation_extraction
-# from IE.attribute_extraction import attribute_extraction
-# from IE.summary import summary
-# from IE.keywords import keywords_extraction
-# from IE.region_identifier import region_extraction
-# from IE.sentiment_analysis import sentiment_analysis
-# from IE.text_classification import text_classification
-# from IE.passage_cos import file_cos
-# from IE.machine_translation import tranlate
+from IE.ner import ner
+from IE.relation import relation_extraction
+from IE.attribute_extraction import attribute_extraction
+from IE.summary import summary
+from IE.keywords import keywords_extraction
+from IE.region_identifier import region_extraction
+from IE.sentiment_analysis import sentiment_analysis
+from IE.text_classification import text_classification
+from IE.passage_cos import file_cos
+from IE.machine_translation import tranlate
 
 PORT = 12931
 app = FastAPI()
