@@ -1,28 +1,40 @@
 import uvicorn
 from fastapi import FastAPI, Request, File, UploadFile
 from fastapi_utils.api_model import APIModel
+from fastapi.responses import RedirectResponse
 import time
 import os
 from typing import List
 
-from IE.ner import ner
-from IE.relation import relation_extraction
-from IE.attribute_extraction import attribute_extraction
-from IE.summary import summary
-from IE.keywords import keywords_extraction
-from IE.region_identifier import region_extraction
-from IE.sentiment_analysis import sentiment_analysis
-from IE.text_classification import text_classification
-from IE.passage_cos import file_cos
-from IE.machine_translation import tranlate
+# from IE.ner import ner
+# from IE.relation import relation_extraction
+# from IE.attribute_extraction import attribute_extraction
+# from IE.summary import summary
+# from IE.keywords import keywords_extraction
+# from IE.region_identifier import region_extraction
+# from IE.sentiment_analysis import sentiment_analysis
+# from IE.text_classification import text_classification
+# from IE.passage_cos import file_cos
+# from IE.machine_translation import tranlate
 
-
+PORT = 12931
 app = FastAPI()
 
 
-async def save_file(file: UploadFile) -> str:
-    """Store uploaded file stream into local server
+@app.get("/")
+async def redirect():
+    """
+    Show Restful API doc in explorer, by redirect to doc route
+    Returns:
+        doc website
+    """
+    response = RedirectResponse(url=f"http://localhost:{PORT}/docs/")
+    return response
 
+
+async def save_file(file: UploadFile) -> str:
+    """
+        Store uploaded file stream into local server
     Args:
         file (UploadFile): file to be extracted, like PDF, Word, TXT, etc.
 
@@ -126,27 +138,6 @@ async def doc_translate(file: UploadFile = File(...)):
     return {'result': result}
 
 
-async def test2(apiname, request: Request):
-    """
-    /test/<apiname>：后面的apiname表示任意名字
-    """
-
-    args = await request.json()
-
-    return {'result': f'这是一个POST，您请求的是：{apiname}，您的参数是：{args}'}
-
-
-# print(relation_extraction("data/re/yanbao007.txt"))
-# print(attribute_extraction("data/re/yanbao007.txt"))
-# print(summary("data/keywords/test.txt"))
-# print(keywords_extraction("data/keywords/test.txt"))
-# print(region_extraction("data/address/news.txt"))
-# print(sentiment_analysis("data/sentiment/negative.txt"))
-# print(text_classification("data/classification/politics/test.txt"))
-# print(file_cos("data/cos/党委理论学习中心组学习材料汇编2023年第16期.pdf",
-#       "data/cos/党委理论学习中心组学习材料汇编2023年第15期.pdf"))
-# print(tranlate("data/translate/test.txt"))
-
 app.post("/doc_ie/ner", tags=["IE"], summary="单文档命名实体识别")(doc_ner)
 app.post("/doc_ie/re", tags=["IE"], summary="单文档关系抽取")(doc_ee)
 app.post("/doc_ie/ae", tags=["IE"], summary="单文档属性抽取")(doc_ae)
@@ -156,12 +147,12 @@ app.post("/doc_ie/region", tags=["IE"], summary="单文档地区识别")(doc_reg
 app.post("/doc_ie/sentiment", tags=["IE"], summary="单文档情感分析")(doc_sentiment)
 app.post("/doc_ie/classification",
          tags=["IE"], summary="单文档文本分类")(doc_classification)
-app.post("/doc_ie/similarity", tags=["IE"], summary="单文档相似度比较")(doc_similarity)
+app.post("/doc_ie/similarity", tags=["IE"], summary="文档相似度比较")(doc_similarity)
 app.post("/doc_ie/translate", tags=["IE"], summary="单文档翻译")(doc_translate)
 
 if __name__ == '__main__':
     uvicorn.run(
         app=app,
         host="localhost",
-        port=12931
+        port=PORT
     )
