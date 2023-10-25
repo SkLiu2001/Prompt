@@ -48,8 +48,7 @@ def keywords_extraction(path, file_type):
     final_prompt = ChatPromptTemplate.from_messages(
         [
             ("system",
-             '''对输入的文本进行**关键词提取**, 要求综合考虑**已有的关键词和新的文本**，关键词**总数不超过五个**，结果并以json格式输出，
-            格式为：{{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}}'''),
+             '''对输入的文本进行**关键词提取**, 要求综合考虑**已有的关键词和新的文本**，关键词**总数不超过五个**，结果并以json格式输出'''),
             few_shot_prompt,
             ("human", "{input}")
         ]
@@ -69,23 +68,27 @@ def keywords_extraction(path, file_type):
     res = {}
     with tqdm(total=len(pages)) as pbar:
         pbar.set_description("Processing:")
+        prefix = ""
         for page in pages:
             texts = text_splitter.split_text(page.page_content)
-            refine = ""
-            prefix = '''下面给出目前已有的关键词列表'''+refine + \
-                '''要求对已有的关键词和新文本进行综合考虑，重新总结不超过"五个"关键词，可以替换原有的关键词,输出格式格式为：{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}'''
             for text in texts:
                 tmp = chain(
                     {"input": prefix+text}, return_only_outputs=True)['text']
                 print(tmp)
-                refine = tmp
-                prefix = '''下面给出目前已有的关键词列表'''+refine + \
-                    '''要求对已有的关键词和新文本进行综合考虑，总结不超过"五个"关键词，可以替换原有的关键词,输出格式格式为：{"keywords": ["关键词1","关键词2","关键词3","关键词4","关键词5"]}'''
+                prefix = '''下面给出目前已有的关键词列表\n'''+tmp + \
+                    '''\n要求对已有的关键词和新文本进行综合考虑，总结不超过**五个**关键词,结果以**json**格式输出'''
                 try:
                     json_object = json.loads(tmp)
                     res = json_object
                 except Exception as e:
                     continue
-
             pbar.update(1)
-    return res
+    # 最多只返回五个关键词
+    try:
+        json_object = json.loads(res)
+        if (len(json_object["keywords"]) > 5):
+            json_object["keywords"] = json_object["keywords"][:5]
+            res = json.dumps(json_object)
+        return res
+    except Exception as e:
+        return res
