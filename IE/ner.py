@@ -12,10 +12,12 @@ from langchain.prompts import (
 )
 from units.merge_json import merge_json
 from tqdm import tqdm
+from units.load_data import load_data
 model = "Qwen-14B-Chat-Int4"
 
 
-def ner(path):
+def ner(path, file_type):
+    pages = load_data(path, file_type)
     examples = [
         {
             "input": "叶利钦总统和夫人亲娜稳步走下脑梯，踏上东道主专为贵宾铺设的红地毯，司前来迎接的中国政府陪同团团长、财政部部长刘仲蔡，中国驻俄罗斯大使李凤林，外交部副部长张德广等热情握手。",
@@ -51,8 +53,7 @@ def ner(path):
     )
 
     # path = "data/cos/"
-    loader_first = PyPDFLoader(path)
-    pages = loader_first.load_and_split()
+
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=256, chunk_overlap=16)
     chain = LLMChain(

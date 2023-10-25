@@ -51,70 +51,70 @@ async def save_file(file: UploadFile) -> str:
     file_content = await file.read()
     with open(file_save_path, "wb") as f:
         f.write(file_content)
-    return file_save_path
+    return file_save_path, file_type
 
 # 实体抽取
 
 
 async def doc_ner(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = ner(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = ner(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 关系抽取
 
 
 async def doc_ee(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = relation_extraction(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = relation_extraction(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 属性抽取
 
 
 async def doc_ae(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = attribute_extraction(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = attribute_extraction(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 摘要
 
 
 async def doc_summary(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = summary(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = summary(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 关键词抽取
 
 
 async def doc_keywords(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = keywords_extraction(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = keywords_extraction(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 地区识别
 
 
 async def doc_region(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = region_extraction(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = region_extraction(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 情感分析
 
 
 async def doc_sentiment(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = sentiment_analysis(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = sentiment_analysis(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 文本分类
 
 
 async def doc_classification(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = text_classification(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = text_classification(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 # 文章相似度比较
@@ -122,19 +122,22 @@ async def doc_classification(file: UploadFile = File(...)):
 
 async def doc_similarity(files: List[UploadFile] = File(...)):
     file_paths = []
+    file_types = []
     for file in files:
-        file_path = await save_file(file)
+        file_path, file_type = await save_file(file)
         file_paths.append(file_path)
+        file_types.append(file_type)
 
-    results = file_cos(file_paths[0], file_paths[1])  # TODO: try catch
+    results = file_cos(file_paths[0], file_paths[1],
+                       file_types[0], file_types[1])  # TODO: try catch
     return {'results': results}
 
 # 翻译
 
 
 async def doc_translate(file: UploadFile = File(...)):
-    file_path = await save_file(file)
-    result = tranlate(file_path)  # TODO: try catch
+    file_path, file_type = await save_file(file)
+    result = tranlate(file_path, file_type)  # TODO: try catch
     return {'result': result}
 
 

@@ -12,11 +12,12 @@ from langchain.prompts import (
 )
 from units.merge_json import merge_json
 from tqdm import tqdm
-model = "Qwen-14B-Chat-Int4"
+from units.load_data import load_data
 
 
-def text_classification(path):
-
+def text_classification(path, file_type):
+    pages = load_data(path, file_type)
+    model = "Qwen-14B-Chat-Int4"
     examples = [
         {"input": '''媒体盘点曾与卡扎菲家族私交甚好西方政要(图)卡扎菲独揽大权时，西方领导人不乏他的“好朋友”，包括法国总统萨科齐，英国前首相布莱尔，意大利总理贝卢斯科尼等；英法意三国均参与到利比亚军事行动中【财新网】(记者 张焕平)利比亚的独裁者卡扎菲已穷途末路，日前，国际刑警组织发出红色通告 要求逮捕卡扎菲 。
     不过，当年在卡扎菲独揽大权时，各国领导人不少是他的“好朋友”，其中不乏西方的政要，包括法国总统萨科齐，英国前首相布莱尔，意大利总理贝卢斯科尼等。
@@ -65,8 +66,6 @@ def text_classification(path):
             ("human", "{input}")
         ]
     )
-    loader = PyPDFLoader(path)
-    pages = loader.load_and_split()
     text_splitter = CharacterTextSplitter(
         chunk_size=2048, chunk_overlap=16)
     chain = LLMChain(

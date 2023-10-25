@@ -12,9 +12,11 @@ from langchain.prompts import (
 )
 from units.merge_json import merge_json
 from tqdm import tqdm
+from units.load_data import load_data
 
 
-def attribute_extraction(path):
+def attribute_extraction(path, file_type):
+    pages = load_data(path, file_type)
     model = "Qwen-14B-Chat-Int4"
 
     examples = [
@@ -42,8 +44,6 @@ def attribute_extraction(path):
             ("human", "{input}")
         ]
     )
-    loader = PyPDFLoader(path)
-    pages = loader.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1024, chunk_overlap=32)
     chain = LLMChain(

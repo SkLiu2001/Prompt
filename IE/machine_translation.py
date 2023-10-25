@@ -11,9 +11,11 @@ from langchain.prompts import (
     ChatPromptTemplate,
 )
 from tqdm import tqdm
+from units.load_data import load_data
 
 
-def tranlate(path):
+def tranlate(path, file_type):
+    pages = load_data(path, file_type)
     model = "Qwen-14B-Chat-Int4"
     examples = [
         {
@@ -50,8 +52,6 @@ def tranlate(path):
         ]
     )
 
-    loader_first = PyPDFLoader(path)
-    pages = loader_first.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=2048, chunk_overlap=16)
     chain = LLMChain(

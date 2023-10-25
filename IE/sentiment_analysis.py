@@ -12,10 +12,11 @@ from langchain.prompts import (
 )
 from units.merge_json import merge_json
 from tqdm import tqdm
+from units.load_data import load_data
 
 
-def sentiment_analysis(path):
-
+def sentiment_analysis(path, file_type):
+    pages = load_data(path, file_type)
     model = "Qwen-14B-Chat-Int4"
 
     examples = [
@@ -44,8 +45,6 @@ def sentiment_analysis(path):
             ("human", "{input}")
         ]
     )
-    loader = PyPDFLoader(path)
-    pages = loader.load_and_split()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=256, chunk_overlap=16)
     chain = LLMChain(

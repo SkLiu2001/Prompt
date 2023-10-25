@@ -1,9 +1,10 @@
 import openai
 import os
-from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import PyPDFLoader, TextLoader
 from openai.embeddings_utils import cosine_similarity, get_embedding
 from tqdm import tqdm
-
+from units.load_data import lazy_load_data
 # 获取访问open ai的密钥
 openai.api_key = "EMPTY"
 openai.api_base = "http://localhost:8000/v1"
@@ -11,28 +12,24 @@ openai.api_base = "http://localhost:8000/v1"
 EMBEDDING_MODEL = "Qwen-14B-Chat-Int4"
 
 
-def mean_embedding(file, model=EMBEDDING_MODEL, is_pdf=True):
-    if is_pdf:
-        loader = PyPDFLoader(file)
-        pages = loader.load_and_split()
-        total_score = [0 for i in range(96)]
-        with tqdm(total=len(pages)) as pbar:
-            pbar.set_description('Processing:')
-            for page in pages:
-                pbar.update(1)
-                embedding = get_embedding(page.page_content, model=model)
-                total_score = [a + b for a, b in zip(total_score, embedding)]
-        return [i / len(pages) for i in total_score]
-    else:
-        with open(file, "r", encoding="utf-8") as f:
-            data = f.read()
-            embedding = get_embedding(data, model=model)
-            return embedding
+def mean_embedding(file, file_type, model=EMBEDDING_MODEL):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1024, chunk_overlap=16)
+    pages = lazy_load_data(file, file_type)
+    total_score = [0 for i in range(96)]
+    with tqdm(total=len(pages)) as pbar:
+        pbar.set_description('Processing:')
+        texts = text_splitter.split_documents(pages)
+        for text in texts:
+            embedding = get_embedding(text.page_content, model=model)
+            total_score = [a + b for a, b in zip(total_score, embedding)]
+            pbar.update(1)
+    return [i / len(pages) for i in total_score]
 
 
-def file_cos(file1, file2):
-    embedding_first = mean_embedding(file1)
-    embedding_second = mean_embedding(file2)
+def file_cos(file1, file2, type1, type2):
+    embedding_first = mean_embedding(file1, file_type=type1)
+    embedding_second = mean_embedding(file2, file_type=type2)
     return {"similarity": cosine_similarity(embedding_first, embedding_second)}
 
 
