@@ -65,8 +65,7 @@ def summary(path, file_type):
     reduce_prompt = ChatPromptTemplate.from_messages(
         [
             ("system",
-             '''你现在已知了一篇文章的分段摘要，请将其进行整合，用流畅的语言重新进行表达，输出结果用json进行表示：{{"summary": "摘要内容"}}'''),
-            few_shot_prompt,
+             '''你现在已知了一篇文章的分段摘要，请将其进行整合，用流畅的语言重新进行表达.'''),
             ("human", "{input}")
         ]
     )
@@ -101,16 +100,11 @@ def summary(path, file_type):
             for text in texts:
                 tmp = chain(
                     {"input": text}, return_only_outputs=True)['text']
-                # print(tmp)
                 try:
                     map += tmp
                 except Exception as e:
                     continue
             pbar.update(1)
-        # print(map)
     res = reduce_chain({"input": map}, return_only_outputs=True)['text']
-    try:
-        json_object = json.loads(res, strict=False)
-        return json_object
-    except Exception as e:
-        return {"summary": tmp}
+    print(res)
+    return {"summary": res}
