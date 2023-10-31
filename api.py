@@ -18,6 +18,7 @@ from IE.machine_translation import tranlate
 from units.calculate_md5 import calculate_md5
 from units.load_data import load_data
 from units.load_data import lazy_load_data
+from units.del_tmp import delete_files_in_directory
 PORT = 12931
 app = FastAPI()
 process_exception = HTTPException(
@@ -65,6 +66,7 @@ async def doc_ner(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await ner(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -80,6 +82,7 @@ async def doc_ee(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await relation_extraction(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -94,6 +97,7 @@ async def doc_ae(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await attribute_extraction(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -109,6 +113,7 @@ async def doc_summary(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await summary(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -124,6 +129,7 @@ async def doc_keywords(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await keywords_extraction(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -139,6 +145,7 @@ async def doc_region(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await region_extraction(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -154,6 +161,7 @@ async def doc_sentiment(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await sentiment_analysis(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -169,6 +177,7 @@ async def doc_classification(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await text_classification(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -190,6 +199,7 @@ async def doc_similarity(files: List[UploadFile] = File(...)):
         pages1 = await lazy_load_data(file_paths[0], file_types[0])
         pages2 = await lazy_load_data(file_paths[1], file_types[1])
         results = await file_cos(pages1=pages1, pages2=pages2)
+        delete_files_in_directory('tmp')
         return {'results': results}
     except ValueError as e:
         raise HTTPException(
@@ -205,6 +215,7 @@ async def doc_translate(file: UploadFile = File(...)):
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
         result = await tranlate(data)
+        delete_files_in_directory('tmp')
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
