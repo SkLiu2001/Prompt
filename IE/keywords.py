@@ -71,7 +71,7 @@ async def keywords_extraction(pages):
         for page in pages:
             texts = text_splitter.split_text(page.page_content)
             for text in texts:
-                tmp = await chain.arun(input=text, return_only_outputs=True)
+                tmp = await chain.arun(input=prefix+text, return_only_outputs=True)
                 print(tmp)
                 prefix = '''下面给出目前已有的关键词列表\n'''+tmp + \
                     '''\n要求对已有的关键词和新文本进行综合考虑，总结不超过**五个**关键词,结果以**json**格式输出'''
