@@ -15,8 +15,7 @@ from tqdm import tqdm
 from units.load_data import load_data
 
 
-def relation_extraction(path, file_type):
-    pages = load_data(path, file_type)
+def relation_extraction(pages):
     model = "Qwen-14B-Chat-Int4"
 
     examples = [

@@ -1,7 +1,7 @@
 from langchain.document_loaders import PyPDFLoader, TextLoader
 
 
-def load_data(path, file_type):
+async def load_data(path, file_type):
     if file_type == 'application/pdf':
         loader_first = PyPDFLoader(path)
         pages = loader_first.load_and_split()
@@ -12,7 +12,7 @@ def load_data(path, file_type):
         return pages
 
 
-def lazy_load_data(path, file_type):
+async def lazy_load_data(path, file_type):
     if file_type == 'application/pdf':
         loader_first = PyPDFLoader(path)
         pages = loader_first.load()

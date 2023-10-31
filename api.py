@@ -16,7 +16,9 @@ from IE.sentiment_analysis import sentiment_analysis
 from IE.text_classification import text_classification
 from IE.passage_cos import file_cos
 from IE.machine_translation import tranlate
-
+from units.calculate_md5 import calculate_md5
+from units.load_data import load_data
+from units.load_data import lazy_load_data
 PORT = 12931
 app = FastAPI()
 
@@ -41,14 +43,15 @@ async def save_file(file: UploadFile) -> str:
     Returns:
         str: local path to read this file
     """
-    time_stamp = int(time.time())
+    # time_stamp = int(time.time())
+    file_content = await file.read()
+    md5 = await calculate_md5(file_content)
     file_prefix = '.'.join(str(file.filename).split('.')[:-1])
     file_suffix = str(file.filename).split('.')[-1]
     if not os.path.exists('tmp'):
         os.mkdir('tmp/')
-    file_save_path = f"tmp/{file_prefix}_{time_stamp}.{file_suffix}"
-    file_type = file.content_type  # unused
-    file_content = await file.read()
+    file_save_path = f"tmp/{file_prefix}_{md5}.{file_suffix}"
+    file_type = file.content_type
     with open(file_save_path, "wb") as f:
         f.write(file_content)
     return file_save_path, file_type
@@ -58,7 +61,8 @@ async def save_file(file: UploadFile) -> str:
 
 async def doc_ner(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = ner(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = ner(data)  # TODO: try catch
     return {'result': result}
 
 # 关系抽取
@@ -66,7 +70,8 @@ async def doc_ner(file: UploadFile = File(...)):
 
 async def doc_ee(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = relation_extraction(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = relation_extraction(data)  # TODO: try catch
     return {'result': result}
 
 # 属性抽取
@@ -74,7 +79,8 @@ async def doc_ee(file: UploadFile = File(...)):
 
 async def doc_ae(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = attribute_extraction(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = attribute_extraction(data)  # TODO: try catch
     return {'result': result}
 
 # 摘要
@@ -82,7 +88,8 @@ async def doc_ae(file: UploadFile = File(...)):
 
 async def doc_summary(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = summary(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = summary(data)  # TODO: try catch
     return {'result': result}
 
 # 关键词抽取
@@ -90,7 +97,8 @@ async def doc_summary(file: UploadFile = File(...)):
 
 async def doc_keywords(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = keywords_extraction(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = keywords_extraction(data)  # TODO: try catch
     return {'result': result}
 
 # 地区识别
@@ -98,7 +106,8 @@ async def doc_keywords(file: UploadFile = File(...)):
 
 async def doc_region(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = region_extraction(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = region_extraction(data)  # TODO: try catch
     return {'result': result}
 
 # 情感分析
@@ -106,7 +115,8 @@ async def doc_region(file: UploadFile = File(...)):
 
 async def doc_sentiment(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = sentiment_analysis(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = sentiment_analysis(data)  # TODO: try catch
     return {'result': result}
 
 # 文本分类
@@ -114,7 +124,8 @@ async def doc_sentiment(file: UploadFile = File(...)):
 
 async def doc_classification(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = text_classification(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = text_classification(data)  # TODO: try catch
     return {'result': result}
 
 # 文章相似度比较
@@ -127,9 +138,9 @@ async def doc_similarity(files: List[UploadFile] = File(...)):
         file_path, file_type = await save_file(file)
         file_paths.append(file_path)
         file_types.append(file_type)
-
-    results = file_cos(file_paths[0], file_paths[1],
-                       file_types[0], file_types[1])  # TODO: try catch
+    pages1 = await lazy_load_data(file_paths[0], file_types[0])
+    pages2 = await lazy_load_data(file_paths[1], file_types[1])
+    results = file_cos(pages1=pages1, pages2=pages2)
     return {'results': results}
 
 # 翻译
@@ -137,7 +148,8 @@ async def doc_similarity(files: List[UploadFile] = File(...)):
 
 async def doc_translate(file: UploadFile = File(...)):
     file_path, file_type = await save_file(file)
-    result = tranlate(file_path, file_type)  # TODO: try catch
+    data = await load_data(file_path, file_type)
+    result = tranlate(data)  # TODO: try catch
     return {'result': result}
 
 
@@ -147,7 +159,8 @@ app.post("/doc_ie/ae", tags=["IE"], summary="单文档属性抽取")(doc_ae)
 app.post("/doc_ie/summary", tags=["IE"], summary="单文档摘要")(doc_summary)
 app.post("/doc_ie/keywords", tags=["IE"], summary="单文档关键词抽取")(doc_keywords)
 app.post("/doc_ie/region", tags=["IE"], summary="单文档地区识别")(doc_region)
-app.post("/doc_ie/sentiment", tags=["IE"], summary="单文档情感分析")(doc_sentiment)
+app.post("/doc_ie/sentiment", tags=["IE"],
+         summary="单文档情感分析")(doc_sentiment)
 app.post("/doc_ie/classification",
          tags=["IE"], summary="单文档文本分类")(doc_classification)
 app.post("/doc_ie/similarity", tags=["IE"], summary="文档相似度比较")(doc_similarity)

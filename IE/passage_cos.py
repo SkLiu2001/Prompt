@@ -12,10 +12,9 @@ openai.api_base = "http://localhost:8000/v1"
 EMBEDDING_MODEL = "Qwen-14B-Chat-Int4"
 
 
-def mean_embedding(file, file_type, model=EMBEDDING_MODEL):
+def mean_embedding(pages, model=EMBEDDING_MODEL):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1024, chunk_overlap=16)
-    pages = lazy_load_data(file, file_type)
     total_score = [0 for i in range(96)]
     with tqdm(total=len(pages)) as pbar:
         pbar.set_description('Processing:')
@@ -27,9 +26,9 @@ def mean_embedding(file, file_type, model=EMBEDDING_MODEL):
     return [i / len(pages) for i in total_score]
 
 
-def file_cos(file1, file2, type1, type2):
-    embedding_first = mean_embedding(file1, file_type=type1)
-    embedding_second = mean_embedding(file2, file_type=type2)
+def file_cos(pages1, pages2):
+    embedding_first = mean_embedding(pages1)
+    embedding_second = mean_embedding(pages2)
     return {"similarity": cosine_similarity(embedding_first, embedding_second)}
 
 
