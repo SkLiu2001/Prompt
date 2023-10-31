@@ -1,8 +1,7 @@
 import uvicorn
-from fastapi import FastAPI, Request, File, UploadFile
+from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi_utils.api_model import APIModel
 from fastapi.responses import RedirectResponse
-import time
 import os
 from typing import List
 
@@ -21,6 +20,8 @@ from units.load_data import load_data
 from units.load_data import lazy_load_data
 PORT = 12931
 app = FastAPI()
+process_exception = HTTPException(
+    status_code=422, detail="Process failed, please check your input.")
 
 
 @app.get("/")
@@ -60,97 +61,156 @@ async def save_file(file: UploadFile) -> str:
 
 
 async def doc_ner(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = ner(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = ner(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 关系抽取
 
 
 async def doc_ee(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = relation_extraction(data)  # TODO: try catch
-    return {'result': result}
-
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = relation_extraction(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 # 属性抽取
 
 
 async def doc_ae(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = attribute_extraction(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = attribute_extraction(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 摘要
 
 
 async def doc_summary(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = summary(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = summary(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 关键词抽取
 
 
 async def doc_keywords(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = keywords_extraction(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = keywords_extraction(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 地区识别
 
 
 async def doc_region(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = region_extraction(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = region_extraction(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 情感分析
 
 
 async def doc_sentiment(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = sentiment_analysis(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = sentiment_analysis(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 文本分类
 
 
 async def doc_classification(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = text_classification(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = text_classification(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 文章相似度比较
 
 
 async def doc_similarity(files: List[UploadFile] = File(...)):
-    file_paths = []
-    file_types = []
-    for file in files:
-        file_path, file_type = await save_file(file)
-        file_paths.append(file_path)
-        file_types.append(file_type)
-    pages1 = await lazy_load_data(file_paths[0], file_types[0])
-    pages2 = await lazy_load_data(file_paths[1], file_types[1])
-    results = file_cos(pages1=pages1, pages2=pages2)
-    return {'results': results}
+    try:
+        file_paths = []
+        file_types = []
+        for file in files:
+            file_path, file_type = await save_file(file)
+            file_paths.append(file_path)
+            file_types.append(file_type)
+        pages1 = await lazy_load_data(file_paths[0], file_types[0])
+        pages2 = await lazy_load_data(file_paths[1], file_types[1])
+        results = file_cos(pages1=pages1, pages2=pages2)
+        return {'results': results}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 # 翻译
 
 
 async def doc_translate(file: UploadFile = File(...)):
-    file_path, file_type = await save_file(file)
-    data = await load_data(file_path, file_type)
-    result = tranlate(data)  # TODO: try catch
-    return {'result': result}
+    try:
+        file_path, file_type = await save_file(file)
+        data = await load_data(file_path, file_type)
+        result = tranlate(data)  # TODO: try catch
+        return {'result': result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422, detail="File type %s is not a valid file type" % file_type)
+    except Exception as e:
+        raise process_exception
 
 
 app.post("/doc_ie/ner", tags=["IE"], summary="单文档命名实体识别")(doc_ner)
