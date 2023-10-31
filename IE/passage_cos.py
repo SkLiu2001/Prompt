@@ -2,7 +2,7 @@ import openai
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader, TextLoader
-from openai.embeddings_utils import cosine_similarity, get_embedding
+from openai.embeddings_utils import cosine_similarity, aget_embedding
 from tqdm import tqdm
 from units.load_data import lazy_load_data
 # 获取访问open ai的密钥
@@ -12,7 +12,7 @@ openai.api_base = "http://localhost:8000/v1"
 EMBEDDING_MODEL = "Qwen-14B-Chat-Int4"
 
 
-def mean_embedding(pages, model=EMBEDDING_MODEL):
+async def mean_embedding(pages, model=EMBEDDING_MODEL):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1024, chunk_overlap=16)
     total_score = [0 for i in range(96)]
@@ -20,15 +20,15 @@ def mean_embedding(pages, model=EMBEDDING_MODEL):
         pbar.set_description('Processing:')
         texts = text_splitter.split_documents(pages)
         for text in texts:
-            embedding = get_embedding(text.page_content, model=model)
+            embedding = await aget_embedding(text.page_content, model=model)
             total_score = [a + b for a, b in zip(total_score, embedding)]
             pbar.update(1)
     return [i / len(pages) for i in total_score]
 
 
-def file_cos(pages1, pages2):
-    embedding_first = mean_embedding(pages1)
-    embedding_second = mean_embedding(pages2)
+async def file_cos(pages1, pages2):
+    embedding_first = await mean_embedding(pages1)
+    embedding_second = await mean_embedding(pages2)
     return {"similarity": cosine_similarity(embedding_first, embedding_second)}
 
 

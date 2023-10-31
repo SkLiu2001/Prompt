@@ -15,7 +15,7 @@ from tqdm import tqdm
 from units.load_data import load_data
 
 
-def text_classification(pages):
+async def text_classification(pages):
     model = "Qwen-14B-Chat-Int4"
     examples = [
         {"input": '''媒体盘点曾与卡扎菲家族私交甚好西方政要(图)卡扎菲独揽大权时，西方领导人不乏他的“好朋友”，包括法国总统萨科齐，英国前首相布莱尔，意大利总理贝卢斯科尼等；英法意三国均参与到利比亚军事行动中【财新网】(记者 张焕平)利比亚的独裁者卡扎菲已穷途末路，日前，国际刑警组织发出红色通告 要求逮捕卡扎菲 。
@@ -83,8 +83,7 @@ def text_classification(pages):
         for page in pages:
             texts = text_splitter.split_text(page.page_content)
             for text in texts:
-                tmp = chain(
-                    {"input": text}, return_only_outputs=True)['text']
+                tmp = await chain.arun(input=text, return_only_outputs=True)
                 try:
                     json_object = json.loads(tmp)
                     merge_json(merged_json, json_object)

@@ -16,7 +16,7 @@ from units.load_data import load_data
 model = "Qwen-14B-Chat-Int4"
 
 
-def ner(pages):
+async def ner(pages):
     examples = [
         {
             "input": "叶利钦总统和夫人亲娜稳步走下脑梯，踏上东道主专为贵宾铺设的红地毯，司前来迎接的中国政府陪同团团长、财政部部长刘仲蔡，中国驻俄罗斯大使李凤林，外交部副部长张德广等热情握手。",
@@ -70,8 +70,9 @@ def ner(pages):
         for page in pages:
             texts = text_splitter.split_text(page.page_content)
             for text in texts:
-                tmp = chain(
-                    {"input": text}, return_only_outputs=True)['text']
+                tmp = await chain.arun(input=text, return_only_outputs=True)
+                # tmp = chain(
+                #     {"input": text}, return_only_outputs=True)['text']
                 # print(tmp)
                 try:
                     json_object = json.loads(tmp, strict=False)

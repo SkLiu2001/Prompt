@@ -15,7 +15,7 @@ from tqdm import tqdm
 from units.load_data import load_data
 
 
-def attribute_extraction(pages):
+async def attribute_extraction(pages):
     model = "Qwen-14B-Chat-Int4"
 
     examples = [
@@ -61,8 +61,7 @@ def attribute_extraction(pages):
         for page in pages:
             texts = text_splitter.split_text(page.page_content)
             for text in texts:
-                tmp = chain(
-                    {"input": text}, return_only_outputs=True)['text']
+                tmp = await chain.arun(input=text, return_only_outputs=True)
                 try:
                     json_object = json.loads(tmp)
                     merged_json = merge_json(merged_json, json_object)

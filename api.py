@@ -64,7 +64,7 @@ async def doc_ner(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = ner(data)  # TODO: try catch
+        result = await ner(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -79,7 +79,7 @@ async def doc_ee(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = relation_extraction(data)  # TODO: try catch
+        result = await relation_extraction(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -93,7 +93,7 @@ async def doc_ae(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = attribute_extraction(data)  # TODO: try catch
+        result = await attribute_extraction(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -108,7 +108,7 @@ async def doc_summary(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = summary(data)  # TODO: try catch
+        result = await summary(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -123,7 +123,7 @@ async def doc_keywords(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = keywords_extraction(data)  # TODO: try catch
+        result = await keywords_extraction(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -138,7 +138,7 @@ async def doc_region(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = region_extraction(data)  # TODO: try catch
+        result = await region_extraction(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -153,7 +153,7 @@ async def doc_sentiment(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = sentiment_analysis(data)  # TODO: try catch
+        result = await sentiment_analysis(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -168,7 +168,7 @@ async def doc_classification(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = text_classification(data)  # TODO: try catch
+        result = await text_classification(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(
@@ -189,7 +189,7 @@ async def doc_similarity(files: List[UploadFile] = File(...)):
             file_types.append(file_type)
         pages1 = await lazy_load_data(file_paths[0], file_types[0])
         pages2 = await lazy_load_data(file_paths[1], file_types[1])
-        results = file_cos(pages1=pages1, pages2=pages2)
+        results = await file_cos(pages1=pages1, pages2=pages2)
         return {'results': results}
     except ValueError as e:
         raise HTTPException(
@@ -204,7 +204,7 @@ async def doc_translate(file: UploadFile = File(...)):
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type)
-        result = tranlate(data)  # TODO: try catch
+        result = await tranlate(data)
         return {'result': result}
     except ValueError as e:
         raise HTTPException(

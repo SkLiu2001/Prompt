@@ -15,7 +15,7 @@ from tqdm import tqdm
 from units.load_data import load_data
 
 
-def keywords_extraction(pages):
+async def keywords_extraction(pages):
     model = "Qwen-14B-Chat-Int4"
 
     examples = [
@@ -71,8 +71,7 @@ def keywords_extraction(pages):
         for page in pages:
             texts = text_splitter.split_text(page.page_content)
             for text in texts:
-                tmp = chain(
-                    {"input": prefix+text}, return_only_outputs=True)['text']
+                tmp = await chain.arun(input=text, return_only_outputs=True)
                 print(tmp)
                 prefix = '''下面给出目前已有的关键词列表\n'''+tmp + \
                     '''\n要求对已有的关键词和新文本进行综合考虑，总结不超过**五个**关键词,结果以**json**格式输出'''
