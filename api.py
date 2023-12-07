@@ -62,9 +62,10 @@ async def save_file(file: UploadFile) -> str:
 
 
 async def doc_ner(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await ner(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -78,9 +79,10 @@ async def doc_ner(file: UploadFile = File(...)):
 
 
 async def doc_ee(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await relation_extraction(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -93,9 +95,10 @@ async def doc_ee(file: UploadFile = File(...)):
 
 
 async def doc_ae(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await attribute_extraction(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -109,9 +112,10 @@ async def doc_ae(file: UploadFile = File(...)):
 
 
 async def doc_summary(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await summary(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -124,10 +128,11 @@ async def doc_summary(file: UploadFile = File(...)):
 # 关键词抽取
 
 
-async def doc_keywords(file: UploadFile = File(...)):
+async def doc_keywords(file: UploadFile = File(...), ):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await keywords_extraction(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -141,9 +146,10 @@ async def doc_keywords(file: UploadFile = File(...)):
 
 
 async def doc_region(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await region_extraction(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -157,9 +163,10 @@ async def doc_region(file: UploadFile = File(...)):
 
 
 async def doc_sentiment(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await sentiment_analysis(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -171,11 +178,11 @@ async def doc_sentiment(file: UploadFile = File(...)):
 
 # 文本分类
 
-
 async def doc_classification(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await text_classification(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -186,7 +193,6 @@ async def doc_classification(file: UploadFile = File(...)):
         raise process_exception
 
 # 文章相似度比较
-
 
 async def doc_similarity(files: List[UploadFile] = File(...)):
     try:
@@ -211,9 +217,10 @@ async def doc_similarity(files: List[UploadFile] = File(...)):
 
 
 async def doc_translate(file: UploadFile = File(...)):
+    max_pages=5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type)
+        data = await load_data(file_path, file_type, max_pages=max_pages)
         result = await tranlate(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -240,6 +247,6 @@ app.post("/doc_ie/translate", tags=["IE"], summary="单文档翻译")(doc_transl
 if __name__ == '__main__':
     uvicorn.run(
         app=app,
-        host="localhost",
+        host="0.0.0.0",
         port=PORT
     )

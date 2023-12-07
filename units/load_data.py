@@ -2,18 +2,18 @@ from langchain.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from fastapi import HTTPException
 
 
-async def load_data(path, file_type):
+async def load_data(path, file_type, max_pages=1000):
     if file_type == 'application/pdf':
         loader_first = PyPDFLoader(path)
-        pages = loader_first.load_and_split()
+        pages = loader_first.load_and_split()[:max_pages]
         return pages
     elif file_type == 'text/plain':
         loader_first = TextLoader(path, encoding='utf-8')
-        pages = loader_first.load_and_split()
+        pages = loader_first.load_and_split()[:max_pages]
         return pages
     elif file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         loader_first = Docx2txtLoader(path)
-        pages = loader_first.load()
+        pages = loader_first.load()[:max_pages]
         return pages
     else:
         raise ValueError("File type %s is not a valid file type" % file_type)
