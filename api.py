@@ -135,7 +135,7 @@ async def doc_keywords(file: UploadFile = File(...), ):
     max_pages = 5
     try:
         file_path, file_type = await save_file(file)
-        data = await load_data(file_path, file_type, max_pages=max_pages)
+        data = await load_data(file_path, file_type, max_pages=max_pages, is_keyword=True)
         result = await keywords_extraction(data)
         delete_files_in_directory('tmp')
         return {'result': result}
@@ -237,14 +237,15 @@ async def doc_translate(file: UploadFile = File(...)):
 
 
 async def doc_paper_read(data: AbstractModel = Body(...)):
-    prompt = []
-    with open('prompt/read_paper.jsonl', 'r', encoding='utf-8') as f:
-        for line in f:
-            prompt.append(eval(line.strip()))
-    result = await paper_read(data.content, prompt)
-    return {'result': result}
-    # except Exception as e:
-    #     raise process_exception
+    try:
+        prompt = []
+        with open('prompt/read_paper.jsonl', 'r', encoding='utf-8') as f:
+            for line in f:
+                prompt.append(eval(line.strip()))
+        result = await paper_read(data.content, prompt)
+        return {'result': result}
+    except Exception as e:
+        raise process_exception
 
 app.post("/doc_ie/ner", tags=["IE"], summary="单文档命名实体识别")(doc_ner)
 app.post("/doc_ie/re", tags=["IE"], summary="单文档关系抽取")(doc_ee)
