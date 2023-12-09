@@ -1,8 +1,9 @@
 import uvicorn
-from fastapi import FastAPI, Request, File, UploadFile, HTTPException
+from fastapi import FastAPI, Request, File, UploadFile, HTTPException, Body
 from fastapi_utils.api_model import APIModel
 from fastapi.responses import RedirectResponse
 import os
+import json
 from typing import List
 
 from IE.ner import ner
@@ -15,10 +16,12 @@ from IE.sentiment_analysis import sentiment_analysis
 from IE.text_classification import text_classification
 from IE.passage_cos import file_cos
 from IE.machine_translation import tranlate
+from IE.paper_read import paper_read
 from units.calculate_md5 import calculate_md5
 from units.load_data import load_data
 from units.load_data import lazy_load_data
 from units.del_tmp import delete_files_in_directory
+from units.abstract_model import AbstractModel
 PORT = 12931
 app = FastAPI()
 process_exception = HTTPException(
@@ -62,7 +65,7 @@ async def save_file(file: UploadFile) -> str:
 
 
 async def doc_ner(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -79,7 +82,7 @@ async def doc_ner(file: UploadFile = File(...)):
 
 
 async def doc_ee(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -95,7 +98,7 @@ async def doc_ee(file: UploadFile = File(...)):
 
 
 async def doc_ae(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -112,7 +115,7 @@ async def doc_ae(file: UploadFile = File(...)):
 
 
 async def doc_summary(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -129,7 +132,7 @@ async def doc_summary(file: UploadFile = File(...)):
 
 
 async def doc_keywords(file: UploadFile = File(...), ):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -146,7 +149,7 @@ async def doc_keywords(file: UploadFile = File(...), ):
 
 
 async def doc_region(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -163,7 +166,7 @@ async def doc_region(file: UploadFile = File(...)):
 
 
 async def doc_sentiment(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -178,8 +181,9 @@ async def doc_sentiment(file: UploadFile = File(...)):
 
 # 文本分类
 
+
 async def doc_classification(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -193,6 +197,7 @@ async def doc_classification(file: UploadFile = File(...)):
         raise process_exception
 
 # 文章相似度比较
+
 
 async def doc_similarity(files: List[UploadFile] = File(...)):
     try:
@@ -217,7 +222,7 @@ async def doc_similarity(files: List[UploadFile] = File(...)):
 
 
 async def doc_translate(file: UploadFile = File(...)):
-    max_pages=5
+    max_pages = 5
     try:
         file_path, file_type = await save_file(file)
         data = await load_data(file_path, file_type, max_pages=max_pages)
@@ -231,6 +236,16 @@ async def doc_translate(file: UploadFile = File(...)):
         raise process_exception
 
 
+async def doc_paper_read(data: AbstractModel = Body(...)):
+    prompt = []
+    with open('prompt/read_paper.jsonl', 'r', encoding='utf-8') as f:
+        for line in f:
+            prompt.append(eval(line.strip()))
+    result = await paper_read(data.content, prompt)
+    return {'result': result}
+    # except Exception as e:
+    #     raise process_exception
+
 app.post("/doc_ie/ner", tags=["IE"], summary="单文档命名实体识别")(doc_ner)
 app.post("/doc_ie/re", tags=["IE"], summary="单文档关系抽取")(doc_ee)
 app.post("/doc_ie/ae", tags=["IE"], summary="单文档属性抽取")(doc_ae)
@@ -243,10 +258,11 @@ app.post("/doc_ie/classification",
          tags=["IE"], summary="单文档文本分类")(doc_classification)
 app.post("/doc_ie/similarity", tags=["IE"], summary="文档相似度比较")(doc_similarity)
 app.post("/doc_ie/translate", tags=["IE"], summary="单文档翻译")(doc_translate)
+app.post("/doc_ie/paper_read", tags=["IE"], summary="论文速读")(doc_paper_read)
 
 if __name__ == '__main__':
     uvicorn.run(
         app=app,
-        host="0.0.0.0",
+        host="localhost",
         port=PORT
     )
